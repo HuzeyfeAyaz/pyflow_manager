@@ -3,22 +3,29 @@ import networkx as nx
 import subprocess
 from collections import deque
 from concurrent.futures import ThreadPoolExecutor, as_completed
+import os
 
 
 class PyflowManager:
-    def __init__(self, yaml_file):
+    def __init__(self, yaml_file, skip_existing=True):
         self.tasks = self.load_tasks(yaml_file)
         self.dag = self.create_dag(self.tasks)
+        self.skip_existing = skip_existing
 
     def load_tasks(self, file_path):
         with open(file_path, 'r') as file:
             tasks = yaml.safe_load(file)
         return tasks['tasks']
 
+    def outputs_exist(self, outputs):
+        return all(os.path.exists(output) for output in outputs)
+
     def create_dag(self, tasks):
         dag = nx.DiGraph()
         for task_name, task_details in tasks.items():
-            dag.add_node(task_name, command=task_details['command'])
+            dag.add_node(
+                task_name, command=task_details['command'],
+                outputs=task_details['outputs'])
             for input_file in task_details['inputs']:
                 for predecessor, details in tasks.items():
                     if input_file in details['outputs']:
@@ -27,9 +34,12 @@ class PyflowManager:
             raise ValueError("The tasks dependencies do not form a DAG.")
         return dag
 
-    def execute_task(self, task_name, command):
-        print(f"Executing {task_name}: {command}")
+    def execute_task(self, task_name, command, outputs):
+        if self.skip_existing and self.outputs_exist(outputs):
+            print(f"Skipping {task_name} as outputs already exist")
+            return task_name, None
         try:
+            print(f"Executing {task_name}: {command}")
             subprocess.run(command, shell=True, check=True)
             print(f"Finished {task_name}")
             return task_name, None  # Return task_name and no error
@@ -52,8 +62,9 @@ class PyflowManager:
                 while queue:
                     current = queue.popleft()
                     command = self.dag.nodes[current]['command']
+                    outputs = self.dag.nodes[current]['outputs']
                     futures[executor.submit(
-                        self.execute_task, current, command)] = current
+                        self.execute_task, current, command, outputs)] = current
 
                 done = as_completed(futures, timeout=None)
                 for future in done:
@@ -75,13 +86,16 @@ class PyflowManager:
 def main():
     import argparse
 
-    parser = argparse.ArgumentParser(description="Python Workflow Manager")
+    parser = argparse.ArgumentParser(description="Pyflow Manager")
     parser.add_argument(
         'yaml_file',
         help="Path to the YAML file defining the tasks and dependencies")
+    parser.add_argument(
+        '--skip-existing', action='store_true',
+        help="Skip tasks if their outputs already exist")
     args = parser.parse_args()
 
-    manager = PyflowManager(args.yaml_file)
+    manager = PyflowManager(args.yaml_file, skip_existing=args.skip_existing)
     manager.execute_workflow()
 
 
