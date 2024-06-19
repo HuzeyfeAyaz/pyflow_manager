@@ -13,3 +13,17 @@ pip install pyflow-manager
 ```bash
 pyflow-manager <path/to/your/tasks.yaml>
 ```
+
+## Sample .yaml File
+
+```yaml
+tasks:
+	task1:
+		command: "echo 'Task 1' > output1.txt"
+		inputs: []
+		outputs: ["output1.txt"]
+	task2:
+		command: "python sample_script.py" # generates output2.txt
+		inputs: ["output1.txt"]
+		outputs: ["output2.txt"]
+```
