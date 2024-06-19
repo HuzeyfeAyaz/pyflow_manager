@@ -1,0 +1,29 @@
+tasks:
+  task1:
+    command: "echo 'Task 1' > output1.txt"
+    inputs: []
+    outputs: ["output1.txt"]
+  task2:
+    command: "echo 'Task 2' > output2.txt"
+    inputs: ["output1.txt"]
+    outputs: ["output2.txt"]
+  task3:
+    command: "echo 'Task 3' > output3.txt"
+    inputs: ["output2.txt"]
+    outputs: ["output3.txt"]
+  task4:
+    command: "echo 'Task 4' > output4.txt"
+    inputs: ["output3.txt"]
+    outputs: ["output4.txt"]
+  task5:
+    command: "echo 'Task 5' > output5.txt"
+    inputs: ["output1.txt"]
+    outputs: ["output5.txt"]
+  task6:
+    command: "python tests/sample_task.py"
+    inputs: ["output5.txt"]
+    outputs: ["output6.txt"]
+  task7:
+    command: "echo 'Task 7' > output7.txt"
+    inputs: ["output6.txt"]
+    outputs: ["output7.txt"]
