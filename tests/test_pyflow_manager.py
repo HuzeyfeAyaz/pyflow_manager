@@ -6,7 +6,7 @@ from pyflow_manager.pyflow_manager import PyflowManager
 def test_pyflow_manager():
     # Create a PyflowManager instance with the sample YAML file
     yaml_file = os.path.join(os.path.dirname(__file__), 'sample_tasks.yaml')
-    manager = PyflowManager(yaml_file)
+    manager = PyflowManager(yaml_file, 2)
 
     # Execute the pyflow
     manager.execute_workflow()
