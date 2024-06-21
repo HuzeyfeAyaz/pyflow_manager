@@ -61,9 +61,11 @@ class PyflowManager:
         try:
             print(f"Executing {task_name}: {command}")
             subprocess.run(command, shell=True, check=True)
+            if not self.files_exist(outputs):
+                raise Exception(f'Outputs are not created due to an error')
             print(f"Finished {task_name}")
             return task_name, None  # Return task_name and no error
-        except subprocess.CalledProcessError as e:
+        except (subprocess.CalledProcessError, Exception) as e:
             print(f"Task {task_name} failed with error: {e}")
             return task_name, e  # Return task_name and the error
 
