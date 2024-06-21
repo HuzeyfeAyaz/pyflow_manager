@@ -26,4 +26,8 @@ tasks:
         command: "python sample_script.py" # generates output2.txt
         inputs: ["output1.txt"]
         outputs: ["output2.txt"]
+    task3:
+        command: "sbatch -W slurm_script.sh" # Sample Slurm usage. Use -W to wait for the job execution
+        inputs: ["output2.txt"]
+        outputs: ["output3.txt"]
 ```
