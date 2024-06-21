@@ -1,5 +1,6 @@
 import os
 import yaml
+import time
 import subprocess
 import networkx as nx
 from concurrent.futures import ThreadPoolExecutor
@@ -62,7 +63,10 @@ class PyflowManager:
             print(f"Executing {task_name}: {command}")
             subprocess.run(command, shell=True, check=True)
             if not self.files_exist(outputs):
-                raise Exception(f'Outputs are not created due to an error')
+                # wait for the outputs to be created
+                time.sleep(10)
+                if not self.files_exist(outputs):
+                    raise Exception(f'Outputs are not created due to an error')
             print(f"Finished {task_name}")
             return task_name, None  # Return task_name and no error
         except (subprocess.CalledProcessError, Exception) as e:
