@@ -1,8 +1,8 @@
-import yaml
-import networkx as nx
-import subprocess
 import os
-from multiprocessing import Pool
+import yaml
+import subprocess
+import networkx as nx
+from concurrent.futures import ThreadPoolExecutor
 
 
 class PyflowManager:
@@ -73,7 +73,7 @@ class PyflowManager:
         tapological_order = list(nx.topological_sort(self.dag))
         n_tasks = len(self.dag.nodes())
 
-        with Pool(self.num_processes) as pool:
+        with ThreadPoolExecutor(self.num_processes) as executor:
             idx = 0
             while len(self.finished_tasks) + len(self.failed_tasks) < n_tasks:
                 concurrent_tasks = [i for i in range(idx, n_tasks) if self.is_ready(
@@ -84,8 +84,8 @@ class PyflowManager:
                     if self.is_ready(task_name) and not self.is_failed(
                             task_name):
                         results.append(
-                            pool.apply_async(
-                                self.execute_task, (task_name,)))
+                            executor.submit(
+                                self.execute_task, task_name))
                     elif self.is_failed(task_name):
                         print(
                             f"Skipping {task_name} since a dependency failed")
@@ -93,7 +93,7 @@ class PyflowManager:
 
                 for result in results:
                     idx += 1
-                    finished_task, error = result.get()
+                    finished_task, error = result.result()
                     if error is not None:
                         self.failed_tasks.add(finished_task)
                     else:

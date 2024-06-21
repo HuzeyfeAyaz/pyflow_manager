@@ -1,6 +1,6 @@
 tasks:
   task1:
-    command: "echo 'Task 1' > output1.txt"
+    command: "python tests/sample_task2.py"
     inputs: []
     outputs: ["output1.txt"]
   task2:
@@ -13,7 +13,7 @@ tasks:
     outputs: ["output3.txt"]
   task4:
     command: "echo 'Task 4' > output4.txt"
-    inputs: ["output3.txt"]
+    inputs: []
     outputs: ["output4.txt"]
   task5:
     command: "echo 'Task 5' > output5.txt"
