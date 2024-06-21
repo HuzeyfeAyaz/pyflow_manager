@@ -31,3 +31,10 @@ tasks:
         inputs: ["output2.txt"]
         outputs: ["output3.txt"]
 ```
+
+## Referance
+
+Please cite this repo if you used in your research
+```
+Ayaz, H. (no date) HuzeyfeAyaz/pyflow_manager: Python based Parallel Workflow Management System, GitHub. Available at: https://github.com/HuzeyfeAyaz/pyflow_manager (Accessed: 21 June 2024). 
+```
