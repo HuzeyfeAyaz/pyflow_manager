@@ -78,8 +78,6 @@ class PyflowManager:
             while len(self.finished_tasks) + len(self.failed_tasks) < n_tasks:
                 concurrent_tasks = [i for i in range(idx, n_tasks) if self.is_ready(
                     tapological_order[i]) or self.is_failed(tapological_order[i])]
-                print(
-                    f"Concurrent tasks: {[tapological_order[i] for i in concurrent_tasks]}")
                 results = []
                 for task_idx in concurrent_tasks:
                     task_name = tapological_order[task_idx]
