@@ -30,11 +30,6 @@ class PyflowManager:
                 for predecessor, details in tasks.items():
                     if input_file in details['outputs']:
                         dag.add_edge(predecessor, task_name)
-
-        dag.add_node('root')
-        for task_name in dag.nodes():
-            if not dag.in_edges(task_name) and task_name != 'root':
-                dag.add_edge('root', task_name)
         if not nx.is_directed_acyclic_graph(dag):
             raise ValueError("The tasks dependencies do not form a DAG.")
         return dag
@@ -86,10 +81,10 @@ class PyflowManager:
             return task_name  # Return task_name
 
     def execute_workflow(self):
-        self.failed_tasks = set()
-        topological_sort = list(nx.topological_sort(self.dag))[1:]
-
         self.result_map = {}
+        self.failed_tasks = set()
+        topological_sort = list(nx.topological_sort(self.dag))
+
         with ThreadPoolExecutor(self.num_processes) as executor:
             for task in topological_sort:
                 self.result_map[task] = executor.submit(
