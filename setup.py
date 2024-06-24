@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='pyflow_manager',
-    version='0.2.4',
+    version='0.3.0',
     packages=find_packages(),
     install_requires=[
         'pyyaml',

@@ -17,8 +17,13 @@ def test_pyflow_manager():
     assert os.path.exists('output3.txt')
     assert os.path.exists('output4.txt')
     assert os.path.exists('output5.txt')
-    assert not os.path.exists('output6.txt')
     assert not os.path.exists('output7.txt')
+    assert not os.path.exists('output8.txt')
+    assert not os.path.exists('output13.txt')
+    assert os.path.exists('output9.txt')
+    assert os.path.exists('output10.txt')
+    assert os.path.exists('output11.txt')
+    assert os.path.exists('output12.txt')
 
     # Test the skip_existing flag
     output_files = ['output1.txt', 'output2.txt']

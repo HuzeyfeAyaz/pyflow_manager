@@ -30,6 +30,11 @@ class PyflowManager:
                 for predecessor, details in tasks.items():
                     if input_file in details['outputs']:
                         dag.add_edge(predecessor, task_name)
+
+        dag.add_node('root')
+        for task_name in dag.nodes():
+            if not dag.in_edges(task_name) and task_name != 'root':
+                dag.add_edge('root', task_name)
         if not nx.is_directed_acyclic_graph(dag):
             raise ValueError("The tasks dependencies do not form a DAG.")
         return dag
@@ -42,23 +47,29 @@ class PyflowManager:
 
         return dependencies
 
-    def is_ready(self, task_name):
-        if len(self.dependencies[task_name]) == 0:
-            return True
-        return all(dep in self.finished_tasks
-                   for dep in self.dependencies[task_name])
-
     def is_failed(self, task_name):
         return any(dep in self.failed_tasks
                    for dep in self.dependencies[task_name])
 
     def execute_task(self, task_name):
+        inputs = self.tasks[task_name]['inputs']
         outputs = self.tasks[task_name]['outputs']
         command = self.tasks[task_name]['command']
 
         if self.skip_existing and self.files_exist(outputs):
             print(f"Skipping {task_name} as outputs already exist")
-            return task_name, None
+            return task_name
+
+        if not self.files_exist(inputs):
+            for dep in self.dependencies[task_name]:
+                while dep not in self.result_map:  # to make sure the dependency is executed
+                    time.sleep(1)
+                self.result_map[dep].result()
+                if dep in self.failed_tasks:
+                    print(f"Skipping {task_name} since a dependency failed")
+                    self.failed_tasks.add(task_name)
+                    return task_name
+
         try:
             print(f"Executing {task_name}: {command}")
             subprocess.run(command, shell=True, check=True)
@@ -68,42 +79,25 @@ class PyflowManager:
                 if not self.files_exist(outputs):
                     raise Exception(f'Outputs are not created due to an error')
             print(f"Finished {task_name}")
-            return task_name, None  # Return task_name and no error
+            return task_name  # Return task_name
         except (subprocess.CalledProcessError, Exception) as e:
             print(f"Task {task_name} failed with error: {e}")
-            return task_name, e  # Return task_name and the error
+            self.failed_tasks.add(task_name)
+            return task_name  # Return task_name
 
     def execute_workflow(self):
-        self.finished_tasks = set()
         self.failed_tasks = set()
-        tapological_order = list(nx.topological_sort(self.dag))
-        n_tasks = len(self.dag.nodes())
+        topological_sort = list(nx.topological_sort(self.dag))[1:]
 
+        self.result_map = {}
         with ThreadPoolExecutor(self.num_processes) as executor:
-            idx = 0
-            while len(self.finished_tasks) + len(self.failed_tasks) < n_tasks:
-                concurrent_tasks = [i for i in range(idx, n_tasks) if self.is_ready(
-                    tapological_order[i]) or self.is_failed(tapological_order[i])]
-                results = []
-                for task_idx in concurrent_tasks:
-                    task_name = tapological_order[task_idx]
-                    if self.is_ready(task_name) and not self.is_failed(
-                            task_name):
-                        results.append(
-                            executor.submit(
-                                self.execute_task, task_name))
-                    elif self.is_failed(task_name):
-                        print(
-                            f"Skipping {task_name} since a dependency failed")
-                        self.failed_tasks.add(task_name)
+            for task in topological_sort:
+                self.result_map[task] = executor.submit(
+                    self.execute_task, task)
 
-                for result in results:
-                    idx += 1
-                    finished_task, error = result.result()
-                    if error is not None:
-                        self.failed_tasks.add(finished_task)
-                    else:
-                        self.finished_tasks.add(finished_task)
+            for result in self.result_map.values():
+                result.result()
+            print("Done!")
 
 
 def main():

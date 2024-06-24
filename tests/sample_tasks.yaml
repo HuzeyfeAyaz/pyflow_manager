@@ -1,6 +1,6 @@
 tasks:
   task1:
-    command: "python tests/sample_task2.py"
+    command: "python tests/sample_task2.py --output output1.txt"
     inputs: []
     outputs: ["output1.txt"]
   task2:
@@ -9,21 +9,45 @@ tasks:
     outputs: ["output2.txt"]
   task3:
     command: "echo 'Task 3' > output3.txt"
-    inputs: ["output2.txt"]
+    inputs: ["output1.txt"]
     outputs: ["output3.txt"]
   task4:
     command: "echo 'Task 4' > output4.txt"
-    inputs: []
+    inputs: ["output2.txt"]
     outputs: ["output4.txt"]
   task5:
     command: "echo 'Task 5' > output5.txt"
-    inputs: ["output1.txt"]
+    inputs: []
     outputs: ["output5.txt"]
   task6:
-    command: "python tests/sample_task.py"
-    inputs: ["output5.txt"]
+    command: "echo 'Task 6' > output6.txt"
+    inputs: ["output3.txt", "output5.txt"]
     outputs: ["output6.txt"]
   task7:
-    command: "echo 'Task 7' > output7.txt"
+    command: "python tests/sample_task.py"
     inputs: ["output6.txt"]
     outputs: ["output7.txt"]
+  task8:
+    command: "echo 'Task 8' > output8.txt"
+    inputs: ["output7.txt"]
+    outputs: ["output8.txt"]
+  task9:
+    command: "echo 'Task 9' > output9.txt"
+    inputs: ["output5.txt"]
+    outputs: ["output9.txt"]
+  task10:
+    command: "echo 'Task 10' > output10.txt"
+    inputs: ["output9.txt"]
+    outputs: ["output10.txt"]
+  task11:
+    command: "echo 'Task 11' > output11.txt"
+    inputs: ["output9.txt"]
+    outputs: ["output11.txt"]
+  task12:
+    command: "python tests/sample_task2.py --output output12.txt"
+    inputs: ["output11.txt"]
+    outputs: ["output12.txt"]
+  task13:
+    command: "echo 'Task 13' > output13.txt"
+    inputs: ["output4.txt", "output7.txt"]
+    outputs: ["output13.txt"]
