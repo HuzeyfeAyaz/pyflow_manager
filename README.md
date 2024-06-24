@@ -11,7 +11,7 @@ pip install pyflow-manager
 ## Usage
 
 ```bash
-pyflow-manager <path/to/your/tasks.yaml> --skip-existing
+pyflow-manager <path/to/your/tasks.yaml> -n 8 --skip-existing
 ```
 
 ## Sample .yaml File

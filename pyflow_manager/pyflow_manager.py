@@ -7,9 +7,9 @@ from concurrent.futures import ThreadPoolExecutor
 
 
 class PyflowManager:
-    def __init__(self, yaml_file, num_processes, skip_existing=True):
+    def __init__(self, yaml_file, num_workers, skip_existing=True):
         self.tasks = self.load_tasks(yaml_file)
-        self.num_processes = num_processes
+        self.num_workers = num_workers
         self.dag = self.create_dag(self.tasks)
         self.dependencies = self.get_dependencies()
         self.skip_existing = skip_existing
@@ -85,7 +85,7 @@ class PyflowManager:
         self.failed_tasks = set()
         topological_sort = list(nx.topological_sort(self.dag))
 
-        with ThreadPoolExecutor(self.num_processes) as executor:
+        with ThreadPoolExecutor(self.num_workers) as executor:
             for task in topological_sort:
                 self.result_map[task] = executor.submit(
                     self.execute_task, task)
@@ -103,15 +103,15 @@ def main():
         'yaml_file',
         help="Path to the YAML file defining the tasks and dependencies")
     parser.add_argument(
-        '--num_processes', default=2, type=int,
-        help="Number of processes to use for parallel execution")
+        '-n', '--num_workers', default=8, type=int,
+        help="Number of workers to use for parallel execution")
     parser.add_argument(
-        '--skip-existing', action='store_true',
+        '-s', '--skip-existing', action='store_true',
         help="Skip tasks if their outputs already exist")
     args = parser.parse_args()
 
     manager = PyflowManager(
-        args.yaml_file, args.num_processes, skip_existing=args.skip_existing)
+        args.yaml_file, args.num_workers, skip_existing=args.skip_existing)
     manager.execute_workflow()
 
 
