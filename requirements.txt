@@ -1,3 +1,5 @@
 pyyaml
 networkx
 pytest
+matplotlib
+numpy

@@ -1,13 +1,13 @@
 from setuptools import setup, find_packages
 
+with open('requirements.txt') as f:
+    required = f.read().splitlines()
+
 setup(
     name='pyflow_manager',
     version='0.3.2',
     packages=find_packages(),
-    install_requires=[
-        'pyyaml',
-        'networkx',
-    ],
+    install_requires=required,
     extras_require={
         'dev': ['pytest'],
     },

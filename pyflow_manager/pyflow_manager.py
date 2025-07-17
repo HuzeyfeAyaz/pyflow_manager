@@ -1,98 +1,47 @@
-import os
-import yaml
-import time
-import subprocess
 import networkx as nx
 from concurrent.futures import ThreadPoolExecutor
+from .loader import load_tasks
+from .dag import create_dag, get_dependencies
+from .executor import PyflowExecutor
+from .print_utils import print_dag_ascii, visualize_dag
+import os
 
 
 class PyflowManager:
     def __init__(self, yaml_file, num_workers, skip_existing=True):
-        self.tasks = self.load_tasks(yaml_file)
+        self.tasks = load_tasks(yaml_file)
         self.num_workers = num_workers
-        self.dag = self.create_dag(self.tasks)
-        self.dependencies = self.get_dependencies()
+        self.dag = create_dag(self.tasks)
+        self.dependencies = get_dependencies(self.dag)
         self.skip_existing = skip_existing
 
-    def load_tasks(self, file_path):
-        with open(file_path, 'r') as file:
-            tasks = yaml.safe_load(file)
-        return tasks['tasks']
-
-    def files_exist(self, outputs):
-        return all(os.path.exists(output) for output in outputs)
-
-    def create_dag(self, tasks):
-        dag = nx.DiGraph()
-        for task_name, task_details in tasks.items():
-            dag.add_node(task_name)
-            for input_file in task_details['inputs']:
-                for predecessor, details in tasks.items():
-                    if input_file in details['outputs']:
-                        dag.add_edge(predecessor, task_name)
-        if not nx.is_directed_acyclic_graph(dag):
-            raise ValueError("The tasks dependencies do not form a DAG.")
-        return dag
-
-    def get_dependencies(self):
-        dependencies = {task: set() for task in self.dag.nodes()}
-        for task, deps in self.dag.adjacency():
-            for dep in deps:
-                dependencies[dep].add(task)
-
-        return dependencies
-
-    def is_failed(self, task_name):
-        return any(dep in self.failed_tasks
-                   for dep in self.dependencies[task_name])
-
-    def execute_task(self, task_name):
-        inputs = self.tasks[task_name]['inputs']
-        outputs = self.tasks[task_name]['outputs']
-        command = self.tasks[task_name]['command']
-
-        if self.skip_existing and self.files_exist(outputs):
-            print(f"Skipping {task_name} as outputs already exist")
-            return task_name
-
-        if not self.files_exist(inputs):
-            for dep in self.dependencies[task_name]:
-                while dep not in self.result_map:  # to make sure the dependency is executed
-                    time.sleep(1)
-                self.result_map[dep].result()
-                if dep in self.failed_tasks:
-                    print(f"Skipping {task_name} since a dependency failed")
-                    self.failed_tasks.add(task_name)
-                    return task_name
-
-        try:
-            print(f"Executing {task_name}: {command}")
-            subprocess.run(command, shell=True, check=True)
-            if not self.files_exist(outputs):
-                # wait for the outputs to be created
-                time.sleep(10)
-                if not self.files_exist(outputs):
-                    raise Exception(f'Outputs are not created due to an error')
-            print(f"Finished {task_name}")
-            return task_name  # Return task_name
-        except (subprocess.CalledProcessError, Exception) as e:
-            print(f"Task {task_name} failed with error: {e}")
-            self.failed_tasks.add(task_name)
-            return task_name  # Return task_name
+    def restrict_to_tasks(self, task_names):
+        """
+        Restrict the workflow to a subgraph containing only the specified task names.
+        Updates self.dag, self.dependencies, and self.tasks accordingly.
+        """
+        self.dag = self.dag.subgraph(task_names).copy()
+        self.dependencies = get_dependencies(self.dag)
+        self.tasks = {k: v for k, v in self.tasks.items() if k in task_names}
 
     def execute_workflow(self):
-        self.result_map = {}
-        self.failed_tasks = set()
-        topological_sort = list(nx.topological_sort(self.dag))
+        executor = PyflowExecutor(self.tasks, self.dag, self.dependencies, self.num_workers, self.skip_existing)
+        executor.execute_workflow()
 
-        with ThreadPoolExecutor(self.num_workers) as executor:
-            for task in topological_sort:
-                self.result_map[task] = executor.submit(
-                    self.execute_task, task)
-
-            for result in self.result_map.values():
-                result.result()
-            print("Done!")
+    def print_dag_ascii(self):
+        print_dag_ascii(self.dag)
+        
+    def visualize_dag(self, output_path=None):
+        """
+        Visualize the DAG using NetworkX and matplotlib.
+        
+        Args:
+            output_path: Optional path to save the image. If None, saves to a temporary file.
+            
+        Returns:
+            Path to the saved image.
+        """
+        return visualize_dag(self.dag, output_path)
 
 
 def main():
@@ -108,10 +57,44 @@ def main():
     parser.add_argument(
         '-s', '--skip-existing', action='store_true',
         help="Skip tasks if their outputs already exist")
+    parser.add_argument(
+        '--print-dag', action='store_true',
+        help="Print the DAG of task execution order as an ASCII tree and exit.")
+    parser.add_argument(
+        '--visualize-dag', action='store_true',
+        help="Visualize the DAG using NetworkX and matplotlib, saving to a temporary file.")
+    parser.add_argument(
+        '--output-image', type=str, default=None,
+        help="Path to save the DAG visualization image (used with --visualize-dag).")
+    parser.add_argument(
+        '-t', '--task', type=str, default=None,
+        help="Run only the specified task and all its dependencies.")
     args = parser.parse_args()
 
     manager = PyflowManager(
         args.yaml_file, args.num_workers, skip_existing=args.skip_existing)
+    if args.print_dag:
+        manager.print_dag_ascii()
+        return
+    if args.visualize_dag:
+        output_path = args.output_image
+        if output_path and not os.path.isabs(output_path):
+            # Convert relative path to absolute
+            output_path = os.path.abspath(output_path)
+        image_path = manager.visualize_dag(output_path)
+        print(f"DAG visualization saved to: {image_path}")
+        return
+    if args.task:
+        # Get all dependencies for the specified task
+        if args.task not in manager.dag.nodes:
+            raise ValueError(f"Task '{args.task}' not found in workflow.")
+        # Get all ancestors (dependencies) and the task itself
+        sub_nodes = set(nx.ancestors(manager.dag, args.task)) | {args.task}
+        sub_dag = manager.dag.subgraph(sub_nodes).copy()
+        # Save original dag and dependencies
+        manager.dag = sub_dag
+        manager.dependencies = get_dependencies(manager.dag)
+        manager.tasks = {k: v for k, v in manager.tasks.items() if k in sub_nodes}
     manager.execute_workflow()
 
 
