@@ -30,6 +30,8 @@ pyflow-manager <path/to/your/tasks.yaml> [options]
 | `-n, --num_workers`  | Number of workers for parallel execution (default: 8)            |
 | `-s, --skip-existing`| Skip tasks if their outputs already exist                         |
 | `--print-dag`        | Print the DAG of task execution order as an ASCII tree and exit   |
+| `--visualize-dag`    | Visualize the DAG using NetworkX and matplotlib, saving to a temporary file |
+| `--output-image`     | Path to save the DAG visualization image (used with --visualize-dag) |
 | `-t, --task`         | Run only the specified task and all its dependencies             |
 
 ## Sample YAML File
@@ -109,14 +111,31 @@ tasks:
     outputs: ["output3.txt"]
 ```
 
-## Example: Print the DAG
+## Examples
+
+### Print the DAG as ASCII Tree
 ```bash
-python -m pyflow_manager.cli tasks.yaml --print-dag
+pyflow-manager tasks.yaml --print-dag
 ```
 
-## Example: Run a Specific Task
+### Visualize the DAG as a Graph
 ```bash
-python -m pyflow_manager.cli tasks.yaml -t sweep_task_a1_bx
+# Save to temporary file and display path
+pyflow-manager tasks.yaml --visualize-dag
+
+# Save to specific file
+pyflow-manager tasks.yaml --visualize-dag --output-image workflow_dag.png
+```
+
+### Run a Specific Task
+```bash
+pyflow-manager tasks.yaml -t sweep_task_datasettrain_modellinear
+```
+
+### Run with Custom Settings
+```bash
+# Use 4 workers and skip existing outputs
+pyflow-manager tasks.yaml -n 4 -s
 ```
 
 ## Modular Code Structure
