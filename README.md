@@ -13,7 +13,7 @@ pip install pyflow-manager
 - **Outputs as Inputs:** Reference outputs of other tasks as inputs (e.g., `task1.outputs`)
 - **DAG Printing:** Visualize the execution order as an ASCII art tree
 - **Include/Import:** Import tasks from other YAML files with `include`
-- **Parameter Sweeps:** Use `parameters` to create multiple tasks with all combinations
+- **Parameter Sweeps:** Use `parameters` to create multiple tasks with all combinations or expand dependencies
 - **Run Specific Task:** Execute a specific task and all its dependencies
 - **Parallel Execution:** Run tasks in parallel with dependency management
 
@@ -54,6 +54,50 @@ tasks:
       a: [1, 2]
       b: [x, y]
 ```
+
+## Parameter Sweeps
+
+Pyflow Manager supports two types of parameter handling:
+
+### 1. Command Parameter Sweeps
+When parameters are used in the `command` field, multiple tasks are created for each parameter combination:
+
+```yaml
+tasks:
+  sweep_task:
+    command: "echo 'Processing {dataset} with {model}' > result_{dataset}_{model}.txt"
+    inputs: []
+    outputs: ["result_{dataset}_{model}.txt"]
+    parameters:
+      dataset: [train, test]
+      model: [linear, neural]
+```
+
+This creates 4 separate tasks:
+- `sweep_task_datasettrain_modellinear`
+- `sweep_task_datasettrain_modelneural`
+- `sweep_task_datasettest_modellinear`
+- `sweep_task_datasettest_modelneural`
+
+### 2. Dependency Parameter Expansion
+When parameters are only used in `inputs` or `outputs` (not in `command`), a single task is created with expanded dependencies:
+
+```yaml
+tasks:
+  collect_results:
+    command: "python collect.py"
+    inputs: ["result_{dataset}_{model}.txt"]
+    outputs: ["summary.txt"]
+    parameters:
+      dataset: [train, test]
+      model: [linear, neural]
+```
+
+This creates one task `collect_results` with inputs expanded to:
+- `result_train_linear.txt`
+- `result_train_neural.txt`
+- `result_test_linear.txt`
+- `result_test_neural.txt`
 
 ### included_tasks.yaml
 ```yaml

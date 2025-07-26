@@ -1,0 +1,24 @@
+tasks:
+  # Task with parameters in command - should generate separate tasks
+  command_param_task:
+    command: "echo 'Processing {dataset} with {method}' > result_{dataset}_{method}.txt"
+    inputs: []
+    outputs: ["result_{dataset}_{method}.txt"]
+    parameters:
+      dataset: [data1, data2]
+      method: [fast, slow]
+  
+  # Task with parameters only in inputs/outputs - should create single task with expanded dependencies
+  io_param_task:
+    command: "python merge_results.py"
+    inputs: ["result_{dataset}_{method}.txt"]
+    outputs: ["merged_results.txt"]
+    parameters:
+      dataset: [data1, data2]
+      method: [fast, slow]
+  
+  # Task with no parameters for comparison
+  final_task:
+    command: "echo 'Final processing' > final.txt"
+    inputs: ["merged_results.txt"]
+    outputs: ["final.txt"]

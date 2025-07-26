@@ -1,0 +1,17 @@
+tasks:
+  # Task with parameters in both command and inputs/outputs - should generate separate tasks
+  mixed_param_task:
+    command: "python process_{method}.py --input input_{dataset}.txt --output output_{dataset}_{method}.txt"
+    inputs: ["input_{dataset}.txt"]
+    outputs: ["output_{dataset}_{method}.txt"]
+    parameters:
+      dataset: [train, test]
+      method: [model1, model2]
+  
+  # Task with parameters only in outputs - should create single task with expanded dependencies
+  output_only_param_task:
+    command: "python combine_outputs.py"
+    inputs: []
+    outputs: ["combined_{version}.txt"]
+    parameters:
+      version: [v1, v2, v3]
