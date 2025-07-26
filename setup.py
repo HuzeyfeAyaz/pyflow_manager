@@ -5,7 +5,7 @@ with open('requirements.txt') as f:
 
 setup(
     name='pyflow_manager',
-    version='0.3.2',
+    version='1.0.1',
     packages=find_packages(),
     install_requires=required,
     extras_require={

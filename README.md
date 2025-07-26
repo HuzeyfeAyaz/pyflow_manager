@@ -11,11 +11,12 @@ pip install pyflow-manager
 ## Features
 - **YAML-based workflow definition**
 - **Outputs as Inputs:** Reference outputs of other tasks as inputs (e.g., `task1.outputs`)
-- **DAG Printing:** Visualize the execution order as an ASCII art tree
+- **DAG Visualization:** Visualize the execution order as ASCII art tree or graphical plots
 - **Include/Import:** Import tasks from other YAML files with `include`
 - **Parameter Sweeps:** Use `parameters` to create multiple tasks with all combinations or expand dependencies
 - **Run Specific Task:** Execute a specific task and all its dependencies
 - **Parallel Execution:** Run tasks in parallel with dependency management
+- **Skip Existing Outputs:** Optionally skip tasks whose outputs already exist
 
 ## Usage
 
