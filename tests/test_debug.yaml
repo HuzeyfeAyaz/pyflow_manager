@@ -1,0 +1,17 @@
+tasks:
+  # This should generate 3 tasks with expanded outputs (model_id in outputs but not command)
+  task_debug1:
+    command: "echo 'cluster: {cluster_id}'"
+    inputs: ["input_cluster_{cluster_id}.txt"]
+    outputs: ["output_cluster_{cluster_id}_model_{model_id}.parquet"]
+    parameters:
+      cluster_id: [0, 1, 2]
+      model_id: [0, 1, 2]
+
+  # This should generate 3 tasks with specific output (model_id fixed)
+  task_debug2:
+    command: "echo 'cluster: {cluster_id}'"
+    inputs: ["input_cluster_{cluster_id}.txt"] 
+    outputs: ["output_cluster_{cluster_id}_model_99.parquet"]
+    parameters:
+      cluster_id: [0, 1, 2]

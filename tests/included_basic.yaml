@@ -1,0 +1,5 @@
+tasks:
+  # Basic task for inclusion testing
+  basic_task:
+    command: "touch basic_output.txt"
+    outputs: ["basic_output.txt"]

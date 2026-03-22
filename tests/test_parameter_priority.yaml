@@ -1,0 +1,14 @@
+tasks:
+  test_parameter_priority:
+    command: "echo 'Result: {{{cluster_id} * 1000}}'"
+    inputs: []
+    outputs: ["output_{{{cluster_id} * 100}}.txt"]
+    parameters:
+      cluster_id: [2, 5]
+      
+  test_parameter_with_expression:
+    command: "echo 'Value: {value}'"
+    inputs: []
+    outputs: ["result.txt"]
+    parameters:
+      value: "{{3 + 4}}"

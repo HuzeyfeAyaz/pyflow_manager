@@ -1,0 +1,7 @@
+tasks:
+  test_task:
+    command: "echo 'Testing {value}' && touch output_{value}.txt"
+    inputs: []
+    outputs: ["output_{value}.txt"]
+    parameters:
+      value: "{{list(range(3))}}"

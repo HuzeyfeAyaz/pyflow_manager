@@ -1,0 +1,22 @@
+tasks:
+  test_expressions_in_parameters:
+    command: "echo 'Parameters test'"
+    inputs: []
+    outputs: ["output_param.txt"]
+    parameters:
+      value: "{{list(range(2))}}"
+      
+  test_expressions_in_command:
+    command: "echo 'Numbers: {{' '.join(map(str, range(3)))}}'"
+    inputs: []
+    outputs: ["command_output.txt"]
+    
+  test_expressions_in_inputs:
+    command: "cat input.txt"
+    inputs: "{{[f'input_{i}.txt' for i in [1, 2]]}}"
+    outputs: ["combined.txt"]
+    
+  test_expressions_in_outputs:
+    command: "touch output.txt"
+    inputs: []
+    outputs: "{{[f'output_{i}.txt' for i in range(2)]}}"

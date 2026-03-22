@@ -3,8 +3,11 @@ import time
 import subprocess
 from concurrent.futures import ThreadPoolExecutor
 
+
 class PyflowExecutor:
-    def __init__(self, tasks, dag, dependencies, num_workers, skip_existing=True):
+    def __init__(
+        self, tasks, dag, dependencies, num_workers, skip_existing=True
+    ):
         self.tasks = tasks
         self.dag = dag
         self.dependencies = dependencies
@@ -21,14 +24,16 @@ class PyflowExecutor:
                 self.result_map[dep].result()
 
         # If any dependency failed, skip this task (do this before any file existence checks)
-        if any(dep in self.failed_tasks for dep in self.dependencies[task_name]):
+        if any(
+            dep in self.failed_tasks for dep in self.dependencies[task_name]
+        ):
             print(f"Skipping {task_name} since a dependency failed")
             self.failed_tasks.add(task_name)
             return task_name
 
-        inputs = self.tasks[task_name]['inputs']
-        outputs = self.tasks[task_name]['outputs']
-        command = self.tasks[task_name]['command']
+        inputs = self.tasks[task_name]["inputs"]
+        outputs = self.tasks[task_name]["outputs"]
+        command = self.tasks[task_name]["command"]
 
         # If any input is missing, skip this task
         if not self.files_exist(inputs):
@@ -42,7 +47,9 @@ class PyflowExecutor:
 
         if not self.files_exist(inputs):
             for dep in self.dependencies[task_name]:
-                while dep not in self.result_map:  # to make sure the dependency is executed
+                while (
+                    dep not in self.result_map
+                ):  # to make sure the dependency is executed
                     time.sleep(1)
                 self.result_map[dep].result()
                 if dep in self.failed_tasks:
@@ -57,7 +64,7 @@ class PyflowExecutor:
                 # wait for the outputs to be created
                 time.sleep(10)
                 if not self.files_exist(outputs):
-                    raise Exception(f'Outputs are not created due to an error')
+                    raise Exception(f"Outputs are not created due to an error")
             print(f"Finished {task_name}")
             return task_name  # Return task_name
         except (subprocess.CalledProcessError, Exception) as e:
@@ -73,13 +80,15 @@ class PyflowExecutor:
         self.result_map = {}
         self.failed_tasks = set()
         import networkx as nx
+
         topological_sort = list(nx.topological_sort(self.dag))
 
         with ThreadPoolExecutor(self.num_workers) as executor:
             for task in topological_sort:
                 self.result_map[task] = executor.submit(
-                    self.execute_task, task)
+                    self.execute_task, task
+                )
 
             for result in self.result_map.values():
                 result.result()
-            print("Done!") 
+            print("Done!")

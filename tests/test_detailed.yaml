@@ -1,0 +1,18 @@
+tasks:
+  # This should generate 3 tasks (only cluster_id in command)
+  task_with_cluster_only:
+    command: "echo 'Processing cluster {cluster_id}'"
+    inputs: ["input_cluster_{cluster_id}.txt"]
+    outputs: ["output_cluster_{cluster_id}_model_{model_id}.parquet"]
+    parameters:
+      cluster_id: [0, 1, 2]
+      model_id: [0, 1, 2]
+
+  # This should generate 9 tasks (both cluster_id and model_id in command)
+  task_with_both_in_command:
+    command: "echo 'cluster: {cluster_id}, model: {model_id}'"
+    inputs: ["input_cluster_{cluster_id}_model_{model_id}.txt"]
+    outputs: ["output_cluster_{cluster_id}_model_{model_id}.parquet"]
+    parameters:
+      cluster_id: [0, 1, 2]
+      model_id: [0, 1, 2]

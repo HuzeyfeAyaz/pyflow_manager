@@ -1,0 +1,15 @@
+tasks:
+  test_task1:
+    command: "echo 'Processing cluster {cluster_id}'"
+    inputs: ["input_cluster_{cluster_id}.txt"]
+    outputs: ["output_cluster_{cluster_id}_model_{model_id}.parquet"]
+    parameters:
+      cluster_id: [0, 1]
+      model_id: [0, 1, 2]
+
+  test_task2:
+    command: "echo 'Processing cluster {cluster_id}'"
+    inputs: ["input_cluster_{cluster_id}.txt"]
+    outputs: ["output_cluster_{cluster_id}_model_99.parquet"]
+    parameters:
+      cluster_id: [0, 1]

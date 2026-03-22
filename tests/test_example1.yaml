@@ -1,0 +1,8 @@
+tasks:
+  generate_clustered_balanced_data_test_bagging:
+    command: "echo 'cluster_id: {cluster_id}, model_id: {model_id}'"
+    inputs: ["data/processed/node_clusters_bagging/test/parquet_cluster{cluster_id}.parquet"]
+    outputs: ["data/processed/balanced_parquet_bagging_clustered/test/cluster_{cluster_id}/balanced_test_data_model_{model_id}.parquet"]
+    parameters:
+      cluster_id: [0, 1, 2]
+      model_id: [0, 1, 2]
